@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { GlobalStyle } from '../GlobalStyle';
 import 'react-toastify/dist/ReactToastify.css';
@@ -22,13 +22,28 @@ const toastSettings = {
 };
 
 export default function App() {
-  const [contacts, setContacts] = useState([]);
+  const [contacts, setContacts] = useState(() => {
+    // check if LS has contacts
+    const savedContacts = localStorage.getItem(`contacts`);
+    const parsedContacts = JSON.parse(savedContacts);
+
+    if (!savedContacts) {
+      return [];
+    } else {
+      return parsedContacts;
+    }
+  });
   const [filter, setFilter] = useState(``);
 
   function notify(data) {
     toast.warn(`${data} is already in contacts`, toastSettings);
   }
+  // adding contacts to LS
+  useEffect(() => {
+    localStorage.setItem(`contacts`, JSON.stringify(contacts));
+  }, [contacts]);
 
+  //adding contacts to the list
   function addContact(newContact) {
     contacts.some(
       contact =>
@@ -40,16 +55,19 @@ export default function App() {
       : setContacts(prevState => [newContact, ...prevState]);
   }
 
+  //deleting contacts from the list
   function deleteContact(expiredContact) {
     setContacts(prevState =>
       prevState.filter(contact => contact.id !== expiredContact.id)
     );
   }
 
+  //filtering contacts
   function changeFilter(event) {
     setFilter(event.target.value);
   }
 
+  //showing filtered contacts
   function getVisibleContacts() {
     const adjustedFilter = filter.toLowerCase();
     const visibleContacts = contacts.filter(contact =>
